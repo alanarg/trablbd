@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model alerta_anomalia {
+  id_alerta     Int       @id(map: "alertas_anomalia_pkey") @default(autoincrement())
+  id_transacao  Int
+  tipo_anomalia String    @db.VarChar(64)
+  descricao     String?   @db.VarChar(124)
+  grau_risco    Int?
+  data_alerta   DateTime? @default(now()) @db.Timestamp(6)
+  transacao     transacao @relation(fields: [id_transacao], references: [id_transacao], onDelete: NoAction, onUpdate: NoAction)
+
+  // Removido o @@unique duplicado
+}
+
+model cliente {
+  id_cliente  Int           @id @default(autoincrement())
+  nome        String        @db.VarChar(64)
+  cpf         String        @unique(map: "cliente_cpf") @db.VarChar(11)
+  data_nasc   DateTime      @db.Date
+  email       String        @db.VarChar(64)
+  telefone    String?       @db.VarChar(15)
+  conta       conta?
+  dispositivo dispositivo[]
+
+  // Removido o @@unique desnecessário
+}
+
+model conta {
+  id_conta                                    Int         @id @default(autoincrement())
+  id_cliente                                  Int         @unique
+  tipo_conta                                  String      @db.VarChar(16)
+  saldo                                       Decimal?    @default(0.00) @db.Decimal(15, 2)
+  data_criacao                                DateTime?   @default(now()) @db.Timestamp(6)
+  limite_noturno                              Decimal?    @default(1000.00) @db.Decimal(15, 2)
+  cliente                                     cliente     @relation(fields: [id_cliente], references: [id_cliente], onDelete: NoAction, onUpdate: NoAction)
+  transacao_transacao_id_conta_destinoToconta transacao[] @relation("transacao_id_conta_destinoToconta")
+  transacao_transacao_id_conta_origemToconta  transacao[] @relation("transacao_id_conta_origemToconta")
+
+  // Simplificado - removido @@id e @@unique redundantes
+  @@unique([id_conta, id_cliente], map: "conta_id_cliente")
+}
+
+model dispositivo {
+  id_dispositivo      Int         @id @default(autoincrement())
+  id_cliente          Int
+  tipo                String?     @db.VarChar(16)
+  sistema_operacional String?     @db.VarChar(16)
+  endereco_ip         String?     @db.Inet
+  cliente             cliente     @relation(fields: [id_cliente], references: [id_cliente], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_cliente")
+  transacao           transacao[]
+
+  // Removido @@id e @@unique redundantes
+}
+
+model transacao {
+  id_transacao                            Int               @id @default(autoincrement())
+  id_conta_origem                         Int?
+  id_conta_destino                        Int?
+  id_dispositivo                          Int?
+  valor                                   Decimal           @db.Decimal(15, 2)
+  tipo                                    String            @db.VarChar(64)
+  data_transacao                          DateTime          @default(now()) @db.Timestamp(6)
+  latitude                                Decimal?          @db.Decimal(9, 6)
+  longitude                               Decimal?          @db.Decimal(9, 6)
+  alerta_anomalia                         alerta_anomalia[]
+  conta_transacao_id_conta_destinoToconta conta?            @relation("transacao_id_conta_destinoToconta", fields: [id_conta_destino], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_conta_destino")
+  conta_transacao_id_conta_origemToconta  conta?            @relation("transacao_id_conta_origemToconta", fields: [id_conta_origem], references: [id_conta], onDelete: Cascade, map: "fk_id_conta_origem")
+  dispositivo                             dispositivo?      @relation(fields: [id_dispositivo], references: [id_dispositivo], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_dispositivo")
+
+  // Removido @@id e @@unique redundantes
+}
