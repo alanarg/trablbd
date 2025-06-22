@@ -26,7 +26,6 @@ export class ContaRepository extends BaseRepository<IConta> {
             
             return contas;
         } catch (err) {
-            console.log(err);
             return [];
         }
 

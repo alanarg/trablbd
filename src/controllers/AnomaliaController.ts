@@ -48,7 +48,6 @@ export class AnomaliaRoutes {
                     res.status(404).json({ message: 'anomalias não encontrados' });
                 }
             } catch (error) {
-                console.log(error);
 
                 res.status(500).json({ error: 'Erro ao buscar clientes' });
             }
@@ -106,7 +105,6 @@ export class AnomaliaRoutes {
                     res.status(404).json({ message: 'anomalias não encontrados' });
                 }
             } catch (error) {
-                console.log(error);
 
                 res.status(500).json({ error: 'Erro ao buscar clientes' });
             }
@@ -129,9 +127,10 @@ export class AnomaliaRoutes {
             try {
 
                 let anomalias = await this.anomaliaService.MaiorHorarioIncidencia();
-                res.status(200).json({ message: 'Anomalias encontradas com sucesso', data: anomalias });
+                res.status(200).json(anomalias);
             } catch (error) {
-                res.status(500).json({ error: 'Erro ao gerar' });
+                
+                res.status(500).json({ error: 'Erro ao buscar' });
             }
         });
 
