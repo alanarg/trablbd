@@ -31,8 +31,6 @@ export class TransacaoService {
         try {
             for (let index = 0; index < 1000; index++) {
                 const contas = await this.contaRepository.BuscarTwoRandom();
-                console.log(contas);
-
 
                 if (contas.length < 2 || contas[0].id_conta === contas[1].id_conta) continue;
 
@@ -52,7 +50,7 @@ export class TransacaoService {
                         tipo: tipos_transacao[Math.floor(Math.random() * tipos_transacao.length)],
                         latitude: faker.location.latitude(),
                         longitude: faker.location.longitude(),
-                        data_transacao: new Date()
+                        data_transacao: this.randomDate( new Date('2024-01-01'), new Date('2025-06-01'))
                     })
                 }
 
@@ -78,76 +76,74 @@ export class TransacaoService {
     }
 
 
-    async CriarTransacao(transacao: ITransacao):Promise<String | undefined>{
+    async CriarTransacao(transacao: ITransacao): Promise<String | undefined> {
         try {
+            let TResult;
 
-            console.log(transacao);
-            
             let transacaoValida = await this.validaSaldo(transacao.id_conta_origem as Number, transacao.valor as Number);
 
             let dataAtual = new Date();
 
             if (transacaoValida) {
-                this.transacaoRepository.create({
+                TResult = await this.transacaoRepository.create({
                     conta_transacao_id_conta_origemToconta: { connect: { id_conta: transacao.id_conta_origem } },
                     conta_transacao_id_conta_destinoToconta: { connect: { id_conta: transacao.id_conta_destino } },
                     dispositivo: { connect: { id_dispositivo: transacao.id_dispositivo } },
                     valor: transacao.valor,
-                    tipo: tipos_transacao[Math.floor(Math.random() * tipos_transacao.length)],
-                    latitude: faker.location.latitude(),
-                    longitude: faker.location.longitude(),
-                    data_transacao: dataAtual
+                    tipo: transacao.tipo,
+                    latitude: transacao.latitude,
+                    longitude: transacao.longitude,
+                    data_transacao: transacao.data_transacao
                 })
-            }else{
-               throw new Error("Saldo insuficiente para a transação!");
+
+                console.log(TResult);
+
+            } else {
+                throw new Error("Saldo insuficiente para a transação!");
             }
 
-
-            let alerta = await this.AnomaliaGerada(transacao);
-
-            if(alerta?.tipo_anomalia == "Limite Noturno"){
-                throw new Error("Limite Noturno!");
-            }
-
+            let alerta = await this.AnomaliaGerada(TResult);
 
             return alerta?.descricao;
 
-            
-            
+
         } catch (err) {
-            console.log(err);
-            
+
+            throw new Error("A transação excede o limite noturno!");
+
         }
 
 
 
     }
-    
-    public async AnomaliaGerada(transacao:ITransacao){
 
-        let anomaliasGeradas:IAnomalia[] = await this.anomaliaRepository
-        .AnomaliasPorConta(transacao.id_conta_origem as number);
+    public async AnomaliaGerada(transacao: ITransacao) {
 
-        let ultimoAlerta = anomaliasGeradas[0];
-        let dataHoraAtual = new Date();
-        dataHoraAtual.setHours(dataHoraAtual.getHours() - 4)
-        dataHoraAtual.setMinutes(dataHoraAtual.getMinutes() - 5);
+        let anomaliasGeradas: IAnomalia[] = await this.anomaliaRepository
+            .AnomaliasPorConta(transacao.id_transacao as number);
 
-        console.log(new Date(ultimoAlerta.data_alerta as Date));
-        console.log(dataHoraAtual);
-        
-        
+        return anomaliasGeradas[0];
 
-        if(new Date(ultimoAlerta.data_alerta as Date) >= dataHoraAtual){
-            console.log(ultimoAlerta);
+        // let dataHoraAtual = new Date();
+        // dataHoraAtual.setHours(dataHoraAtual.getHours() - 4)
+        // dataHoraAtual.setMinutes(dataHoraAtual.getMinutes() - 5);
 
-            return ultimoAlerta;
-        }
-            
+
+        // if (new Date(ultimoAlerta.data_alerta as Date) >= dataHoraAtual) {
+
+        //     return ultimoAlerta;
+        // }
+
+
+
+    }
+
+    public randomDate(start: Date, end: Date): Date {
+        return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
     }
 
     public gerarCPFValido(): string {
-        return faker.helpers.replaceSymbols('###########');
+    return faker.helpers.replaceSymbols('###########');
     }
 
 

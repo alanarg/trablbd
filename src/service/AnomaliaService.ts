@@ -25,8 +25,6 @@ export class AnomaliaService {
         try {
             let clientes = await this.anomaliaRepository.Top10ClientesComTransacoesSuspeitas();
 
-            console.log(clientes);
-
             return clientes;
 
         } catch (err) {
@@ -36,7 +34,15 @@ export class AnomaliaService {
     }
 
     public async MaiorHorarioIncidencia() {
+        try {
 
+            return await this.anomaliaRepository.HorarioMaiorIncidencia();
+
+        } catch (err) {
+            console.log(err);
+            
+            throw new Error("Operação falhou!")
+        }
     }
 
     public async EvolucaoAnomalias(tipo: 'diaria' | 'horaria' | 'mensal') {

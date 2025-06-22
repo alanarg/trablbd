@@ -65,10 +65,10 @@ export class AnomaliaRepository extends BaseRepository<IAnomalia> {
         try {
             const alertas = await this.prismaClient.$queryRaw`
                 SELECT 
-                DATE_TRUNC('hour', data_alerta) as hora,
+                DATE_TRUNC('hour', t.data_transacao) as hora,
                 COUNT(*) as total_alertas
-                FROM alerta_anomalia
-                WHERE data_alerta >= NOW() - INTERVAL '24 hours'
+                FROM alerta_anomalia aa JOIN transacao t ON aa.id_transacao = t.id_transacao
+                WHERE t.data_transacao >= NOW() - INTERVAL '24 hours'
                 GROUP BY hora
                 ORDER BY hora ASC
                     `;
@@ -91,16 +91,16 @@ export class AnomaliaRepository extends BaseRepository<IAnomalia> {
         try {
             const alertas = await this.prismaClient.$queryRaw`
                 SELECT 
-                DATE(data_alerta) as dia,
+                DATE_TRUNC('day',t.data_transacao) as dia,
                 COUNT(*) as total_alertas
-                FROM alerta_anomalia
-                WHERE data_alerta >= NOW() - INTERVAL '30 days'
+                FROM alerta_anomalia  aa JOIN transacao t ON aa.id_transacao = t.id_transacao
+                WHERE t.data_transacao >= NOW() - INTERVAL '30 days'
                 GROUP BY dia
                 ORDER BY dia ASC
                     `;
 
 
-             return alertas.map((row: any) => ({
+            return alertas.map((row: any) => ({
                 ...row,
                 total_alertas: Number(row.total_alertas)
             }));
@@ -117,16 +117,16 @@ export class AnomaliaRepository extends BaseRepository<IAnomalia> {
         try {
             const alertas = await this.prismaClient.$queryRaw`
                 SELECT 
-                DATE_TRUNC('month', data_alerta) as mes,
-                COUNT(*) as total_alertas
-                FROM alerta_anomalia
-                WHERE data_alerta >= NOW() - INTERVAL '1 year'
-                GROUP BY mes
+                DATE_TRUNC('month', t.data_transacao) as mes,
+                    COUNT(*) as total_alertas
+                    FROM alerta_anomalia aa JOIN transacao t ON aa.id_transacao = t.id_transacao
+                    WHERE t.data_transacao >= NOW() - INTERVAL '1 year'
+                    GROUP BY mes
                 ORDER BY mes ASC
                     `;
 
 
-              return alertas.map((row: any) => ({
+            return alertas.map((row: any) => ({
                 ...row,
                 total_alertas: Number(row.total_alertas)
             }));
@@ -134,6 +134,35 @@ export class AnomaliaRepository extends BaseRepository<IAnomalia> {
 
         } catch (err) {
 
+            return [];
+
+        }
+
+    }
+
+
+    async HorarioMaiorIncidencia() {
+        try {
+            const alertas = await this.prismaClient.$queryRaw`
+               SELECT 
+              EXTRACT(HOUR FROM t.data_transacao) AS hora,
+              COUNT(*) AS total_transacoes,
+              aa.tipo_anomalia
+            FROM alerta_anomalia aa JOIN transacao t ON aa.id_transacao = t.id_transacao
+            GROUP BY hora, aa.tipo_anomalia
+            ORDER BY total_transacoes DESC LIMIT 10;
+                    `;
+
+            return alertas
+            // .map((row: any) => ({
+            //   ...row,
+            //   total_alertas: Number(row.total_alertas)
+            // }));
+
+
+        } catch (err) {
+            console.log(err);
+            
             return [];
 
         }

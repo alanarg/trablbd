@@ -19,7 +19,7 @@ export class TransacaoRoutes {
         /**
         * @swagger
         * /api/transacao/gerarMilTransacoes:
-        *   get:
+        *   post:
         *     summary: Gera automaticamente 1000 transações de clientes previamente cadastrados.
         *     tags:
         *       - Geração transações
@@ -28,7 +28,7 @@ export class TransacaoRoutes {
         *         description:  Gera automaticamente 1000 transações
         */
 
-        this.router.get('/transacao/gerarMilTransacoes', async (req: Request, res: Response) => {
+        this.router.post('/transacao/gerarMilTransacoes', async (req: Request, res: Response) => {
             try {
 
                 await this.transacaoService.GerarRandom();
@@ -78,7 +78,6 @@ export class TransacaoRoutes {
          */
         this.router.post('/transacao/criar', async (req: Request, res: Response) => {
             try {
-                console.log(req.body);
 
                 let result = await this.transacaoService.CriarTransacao(req.body);
 
@@ -91,7 +90,14 @@ export class TransacaoRoutes {
                 }
 
             } catch (error) {
-                res.status(500).json({ error });
+
+                console.log(error);
+
+
+
+                let message = error as Error;
+                
+                res.status(500).send({ error: message.message });
             }
         });
 
