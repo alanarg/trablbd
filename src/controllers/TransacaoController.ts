@@ -53,32 +53,35 @@ export class TransacaoRoutes {
          *             properties:
          *               id_conta_origem:
          *                 type: number
-         *                 example: 0
+         *                 example: 401
          *               id_conta_destino:
          *                 type: number
-         *                 example: 0
+         *                 example: 402
          *               id_dispositivo:
          *                 type: number
-         *                 example: 0
+         *                 example: 301
          *               valor:
          *                 type: number
-         *                 example: 100.00
+         *                 example: 10000.00
          *               tipo:
          *                 type: string
          *                 example: "PIX"
+         *               data_transacao:
+         *                  type: date
+         *                  example: "2025-06-22T10:41:21.338Z"
          *               latitude:
-         *                 type: number
-         *                 example: 0
+         *                 type: string
+         *                 example: "-33.433900"
          *               longitude:
-         *                 type: number
-         *                 example: 0
+         *                 type: string
+         *                 example: "149.460900"
          *     responses:
          *       200:
          *         description: Transação criada com sucesso
          */
         this.router.post('/transacao/criar', async (req: Request, res: Response) => {
             try {
-
+                
                 let result = await this.transacaoService.CriarTransacao(req.body);
 
                 if (result) {
@@ -90,9 +93,6 @@ export class TransacaoRoutes {
                 }
 
             } catch (error) {
-
-                console.log(error);
-
 
 
                 let message = error as Error;

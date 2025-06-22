@@ -96,8 +96,6 @@ export class TransacaoService {
                     data_transacao: transacao.data_transacao
                 })
 
-                console.log(TResult);
-
             } else {
                 throw new Error("Saldo insuficiente para a transação!");
             }

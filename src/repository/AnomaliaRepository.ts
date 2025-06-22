@@ -152,12 +152,11 @@ export class AnomaliaRepository extends BaseRepository<IAnomalia> {
             GROUP BY hora, aa.tipo_anomalia
             ORDER BY total_transacoes DESC LIMIT 10;
                     `;
-
-            return alertas
-            // .map((row: any) => ({
-            //   ...row,
-            //   total_alertas: Number(row.total_alertas)
-            // }));
+            
+            return alertas.map((row: any) => ({
+              ...row,
+              total_transacoes: Number(row.total_transacoes)
+            }));
 
 
         } catch (err) {

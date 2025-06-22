@@ -36,7 +36,10 @@ export class AnomaliaService {
     public async MaiorHorarioIncidencia() {
         try {
 
-            return await this.anomaliaRepository.HorarioMaiorIncidencia();
+            let result =  await this.anomaliaRepository.HorarioMaiorIncidencia();
+
+            return result;
+            
 
         } catch (err) {
             console.log(err);

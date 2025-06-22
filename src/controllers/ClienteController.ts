@@ -51,7 +51,6 @@ export class ClienteRoutes {
 
                 
             } catch (error) {
-                console.log(error);
                 
                 res.status(500).json({ error: 'Erro ao buscar clientes' });
             }
