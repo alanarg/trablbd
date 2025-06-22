@@ -2,6 +2,7 @@
 import express, { Request, Response, Router } from 'express';
 import { ClienteService } from '../service/ClienteService';
 import { AnomaliaService } from '../service/AnomaliaService';
+import { IAnomalia } from '../interfaces/IAnomalia';
 
 export class AnomaliaRoutes {
     private router: Router;
@@ -19,8 +20,6 @@ export class AnomaliaRoutes {
             try {
 
                 const anomalias = await this.anomaliaService.BuscarTodos();
-                console.log(anomalias);
-
                 res.status(200);
             } catch (error) {
                 res.status(500).json({ error: 'Erro ao buscar clientes' });
@@ -60,7 +59,7 @@ export class AnomaliaRoutes {
      * @swagger
      * /api/anomalia/evolucaoAnomalias:
      *   post:
-     *     summary: Retorna a evolução das anomalias, podendo ser 'diaria', 'mensal' ou 'horaria'
+     *     summary: Retorna a evolução das anomalias, podendo ser 'hoje', 'ultimosTrintaDias' ou 'horaria'
      *     tags:
      *       - Evolução Anomalias
      *     requestBody:
@@ -70,9 +69,15 @@ export class AnomaliaRoutes {
      *           schema:
      *             type: object
      *             properties:
-     *               tipo:
-     *                 type: string
-     *                 example: "mensal"
+     *               ultimas24horas:
+     *                  type: boolean
+     *                  example: false
+     *               ultimos30Dias:
+     *                  type: boolean
+     *                  example: false
+     *               ultimos365Dias:
+     *                 type: boolean
+     *                 example: true
      *     responses:
      *       200:
      *         description: Lista de anomalias
@@ -80,8 +85,20 @@ export class AnomaliaRoutes {
         this.router.post('/anomalia/evolucaoAnomalias', async (req: Request, res: Response) => {
             try {
 
-                let { tipo } = req.body;
-                const anomalias = await this.anomaliaService.EvolucaoAnomalias(tipo);
+                let { ultimas24horas, ultimos30Dias, ultimos365Dias } = req.body;
+
+                let anomalias:IAnomalia[];
+
+                if(ultimas24horas){
+                    anomalias = await this.anomaliaService.EvolucaoAnomalias('horaria');
+
+                }else if(ultimos30Dias){
+                    anomalias = await this.anomaliaService.EvolucaoAnomalias('diaria');
+
+                }else{
+                    anomalias = await this.anomaliaService.EvolucaoAnomalias('mensal');
+                }
+
 
                 if (anomalias) {
                     res.json(anomalias);
@@ -92,6 +109,29 @@ export class AnomaliaRoutes {
                 console.log(error);
 
                 res.status(500).json({ error: 'Erro ao buscar clientes' });
+            }
+        });
+
+
+
+        /**
+         * @swagger
+         * /api/anomalia/horarioMaiorIncidencia:
+         *   get:
+         *     summary: Top 10 horários de maior incidência de alertas e seus tipos
+         *     tags:
+         *       - Top 10 horários de maior incidência
+         *     responses:
+         *       200:
+         *         description: Busca top 10 horários de maior incidência
+         */
+        this.router.get('/anomalia/horarioMaiorIncidencia', async (req: Request, res: Response) => {
+            try {
+
+                let anomalias = await this.anomaliaService.MaiorHorarioIncidencia();
+                res.status(200).json({ message: 'Anomalias encontradas com sucesso', data: anomalias });
+            } catch (error) {
+                res.status(500).json({ error: 'Erro ao gerar' });
             }
         });
 
